@@ -1,0 +1,21 @@
+# Job service spec for the in-app dbt run.
+#
+# No endpoints -- this is a batch job that exits when dbt finishes.
+# Image path has NO registry hostname (native app requirement).
+# DBT_DATABASE is intentionally absent: the entrypoint falls back to the
+# SPCS-injected SNOWFLAKE_DATABASE, which is the application's own database.
+spec:
+  containers:
+    - name: dbt
+      image: /WMS_PROVIDER_DB/IMAGES/DBT_REPO/wms-dbt:v2
+      env:
+        DBT_SCHEMA: PUBLIC
+        DBT_COMMAND: run
+        DBT_THREADS: "4"
+      resources:
+        requests:
+          memory: 1Gi
+          cpu: 0.5
+        limits:
+          memory: 2Gi
+          cpu: 1

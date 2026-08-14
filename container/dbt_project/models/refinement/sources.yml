@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw WMS feed. Backed by raw.orders_source, a view the app owns."
+    schema: RAW
+    tables:
+      # A VIEW, not the seeded table. The app swaps what it points at --
+      # seeded demo data, or reference('consumer_orders') for the consumer's
+      # own table -- without any change to this dbt project.
+      - name: orders_source

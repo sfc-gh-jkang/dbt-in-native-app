@@ -1,0 +1,48 @@
+# Secrets & credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+credentials.json
+connections.toml
+**/secrets/
+**/*secret*
+**/*credential*
+**/*password*
+.streamlit/secrets.toml
+
+# Terraform — state + tfvars hold real infra IDs / secrets in plaintext
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+
+# dbt build artifacts
+target/
+dbt_packages/
+logs/
+.user.yml
+profiles.yml
+
+# NOTE: the 500 generated scale-test models (scale_stg_*, scale_int_*, scale_r5_*)
+# ARE intentionally committed, so a fresh clone can build the image without
+# running the generator first. Do not add a scale_*.sql ignore rule here — an
+# earlier `gen_*.sql` rule matched nothing (the generator emits scale_*), which
+# made this file look like it excluded them when it never did.
+
+# Local run logs
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# macOS
+.DS_Store

@@ -1,0 +1,21 @@
+name: 'wms_analytics'
+version: '1.0.0'
+config-version: 2
+profile: 'wms_analytics'
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  wms_analytics:
+    refinement:
+      +schema: refinement
+      +materialized: view
+    reporting:
+      +schema: reporting
+      +materialized: table
+    release:
+      +schema: release
+      +materialized: view

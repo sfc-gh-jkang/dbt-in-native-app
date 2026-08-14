@@ -1,0 +1,40 @@
+manifest_version: 2
+
+version:
+  name: v1
+  label: "WMS Analytics (dbt in SPCS)"
+  comment: "dbt Core runs inside the app. Transformation logic is never exposed to the consumer."
+
+artifacts:
+  setup_script: setup.sql
+  container_services:
+    images:
+      - /WMS_PROVIDER_DB/IMAGES/DBT_REPO/wms-dbt:v11
+
+privileges:
+  # Needed to create the pool the dbt job service runs on.
+  - CREATE COMPUTE POOL:
+      description: "Run the the ISV dbt transformation job inside your account, on your compute."
+  # REQUIRED because the container issues SQL. dbt does nothing but issue SQL.
+  - CREATE WAREHOUSE:
+      description: "Create a dedicated warehouse for the dbt transformation runs."
+  # Only needed if the consumer uses core.enable_schedule() for unattended runs.
+  - EXECUTE TASK:
+      description: "Run the transformation on a schedule instead of calling it by hand."
+
+# NOTE: BIND SERVICE ENDPOINT is deliberately omitted. This app runs only a JOB
+# service with no ingress endpoints, so the privilege should not be required.
+
+# Object reference: in production the app transforms the CONSUMER'S OWN tables
+# rather than data seeded inside the app. The consumer binds their table to this
+# reference; the app reads it through reference('consumer_orders'). Only SELECT
+# is requested -- the app never writes to consumer data.
+references:
+  - consumer_orders:
+      label: "Your WMS orders table"
+      description: "The source orders table in your account that this app should transform. Only SELECT is requested; the app never writes to it."
+      privileges:
+        - SELECT
+      object_type: TABLE
+      multi_valued: false
+      register_callback: core.register_reference
