@@ -995,6 +995,25 @@ python3 scripts/generate_models.py --refinement 150 --reporting 200 --release 15
   session.** It is not empty — wrap the query in `SYSTEM$BEGIN_DEBUG_APPLICATION('<app>')` in the same
   session and the rows appear. Reading it without the debug session produced a contradiction (15
   refreshes one minute, none the next) that looked like the table had been dropped.
+- **A teardown script with a hardcoded object list is a bug.** The first version of
+  `98_teardown_all.sh` named the apps to drop. It was only complete because a test app was
+  hand-added to the list mid-session; anything created afterwards would have been left running with
+  a compute pool attached, quietly billing. It now enumerates `SHOW APPLICATIONS LIKE 'WMS%'` and
+  derives each app's pool and warehouse from its name, so it cannot go stale. It also swept only
+  consumer *applications* during verification, and would have declared a clean teardown while a
+  consumer pool and database were still live.
+- **`SELECT COUNT(*) FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))` is the standard way to count `SHOW`
+  output, and it fails on any connection with no default warehouse** — `000606 No active warehouse
+  selected`. Plain `SHOW` needs no warehouse; the `SELECT` over its result does. Two of the four demo
+  accounts checked here have no default warehouse, so the RESULT_SCAN form returned nothing for them
+  while `SHOW` worked fine. Counting the length of `SHOW ... --format json` avoids both traps: it is
+  structured (unlike grepping the text, where a pattern anchored on the name column can never match
+  because every row starts with `created_on`) and it needs no warehouse.
+- **Put a positive control in any "it's all gone" check.** A zero from a broken query is
+  indistinguishable from a real zero. The teardown counts objects it *expects* to find on each
+  account first, and if that control is zero or errors it reports `INCONCLUSIVE` and exits 2 rather
+  than claiming success. That control is what caught the warehouse bug above — the affected accounts
+  would otherwise have reported a confident, meaningless "0 objects remaining".
 - **Dropping a version from a release channel is deferred, not immediate.** `MODIFY RELEASE CHANNEL ...
   DROP VERSION` returns success, but re-running it says `512011` "was already set to be dropped" while
   `ADD VERSION` still fails with `512004`. There are two distinct causes and they need different
